@@ -18,13 +18,15 @@ import json
 import NoteGrid
 import NotedItem
 
-#store terminal width
+#get terminal width
 columns, rows = os.get_terminal_size()
 width = columns
+
 
 def saveNotes(noteList):
     noteFile = open('note_data/notes', 'w')
     noteDict = {}
+    print(noteList)
     for notedItemIndex in range(len(noteList)):
         notedItem = noteList[notedItemIndex]
         if type(notedItem) == NotedItem.NoteItem:
@@ -34,10 +36,9 @@ def saveNotes(noteList):
     json.dump(noteDict, noteFile)
 
 
-def retrieveNotes():
+def retrieveNotes(noteList):
     noteFile = open('note_data/notes', 'r')
     noteDict = json.load(noteFile)
-    #TODO convert noteDict into noteList
     refreshedNoteList = []
     for notedItem in noteDict:
         noteItemDict = noteDict[notedItem]
@@ -49,13 +50,7 @@ def retrieveNotes():
     noteFile.close()
     return refreshedNoteList
 
-
-def makeAList():
-    pass
-
-def makeANote(noteList):
-    """Make a ListItem
-    """
+def noteTitlePrompt():
     noteTitlePrompt = [
     {
         'type': 'input',
@@ -66,6 +61,46 @@ def makeANote(noteList):
     noteTitleAnswer = prompt(noteTitlePrompt)
 
     noteTitle = noteTitleAnswer['noteTitle']
+    return noteTitle
+
+def makeAList(noteList, displayNoteView=True):
+    """Make a ListItem
+    """
+    noteTitle = noteTitlePrompt()
+
+    listFinished = False
+    listItems = []
+    while listFinished == False:
+        addListItem = [
+        {
+            'type': 'input',
+            'name': 'listItem',
+            'message': 'Add a list item (Enter \'-\' to finish):',
+        }]
+
+        listItemAnswer = prompt(addListItem)
+
+        listItem = (listItemAnswer['listItem'], False)
+
+        listItems.append(listItem)
+
+        if listItemAnswer.get('listItem') == '-':
+            listItems.pop(len(listItems)-1)
+            listFinished = True
+
+    newListItem = NotedItem.ListItem(noteTitle, listItems)
+    noteList.append(newListItem)
+
+    if displayNoteView:
+        noteView()
+    else:
+        return
+
+
+def makeANote(noteList):
+    """Make a NoteItem
+    """
+    noteTitle = noteTitlePrompt()
 
     os.system('$EDITOR note')
 
@@ -79,7 +114,11 @@ def makeANote(noteList):
     noteList.append(newNote)
 
     saveNotes(noteList)
-    noteView()
+    
+    if displayNoteView:
+        noteView()
+    else:
+        return
 
 
 def editNoteSelectorView():
@@ -116,13 +155,13 @@ def noteView():
     noteOptionsChoice = prompt(noteOptions)
 
     if noteOptionsChoice['noteChoice'] == '✎ Make a New Note ✎':
-        makeANote(noteList)
+        makeANote()
     elif noteOptionsChoice['noteChoice'] == '✎ Make a New List ✎':
         makeAList()
     elif noteOptionsChoice['noteChoice'] == '✎ Edit a Note ✎':
         editNoteSelectorView()
     elif noteOptionsChoice['noteChoice'] == '⛔ Exit ⛔':
-        return
+        saveNotes()
 
 def animateWelcomeText():
     """Animates the welcome noted text in ASCII font and welcome paragraph."""
