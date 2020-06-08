@@ -37,3 +37,5 @@ For a list:
 ```sh
 noted --list
 ```
+## More Info
+<p> This project is still under heavy development, so if you would like to help out feel free to reach out. </p>
