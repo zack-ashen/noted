@@ -44,7 +44,9 @@ def retrieveNotes():
         if 'body' in noteItemDict.keys():
             newNoteItem = NotedItem.NoteItem(noteItemDict['title'], noteItemDict['body'])
         elif 'items' in noteItemDict.keys():
-            newNoteItem = NotedItem.NoteItem(noteItemDict['title'], noteItemDict['items'])
+            for item in range(len(noteItemDict['items'][0])):
+                noteItemDict['items'][0][item] = tuple(noteItemDict['items'][0][item])
+            newNoteItem = NotedItem.ListItem(noteItemDict['title'], noteItemDict['items'][0])
         refreshedNoteList.append(newNoteItem)
     noteFile.close()
     return refreshedNoteList
@@ -90,6 +92,8 @@ def makeAList(noteList, displayNoteView=True):
     newListItem = NotedItem.ListItem(noteTitle, listItems)
     noteList.append(newListItem)
 
+    saveNotes(noteList)
+
     if displayNoteView:
         noteView()
     else:
@@ -127,9 +131,10 @@ def editNoteSelectorView():
 def noteView():
     #attempt to retrieve notes from previous run and print to screen
     os.system('clear')
+    noteList = retrieveNotes()
+    printGrid(noteList)
     try:
-        noteList = retrieveNotes()
-        printGrid(noteList)
+
         options = [
         '✎ Make a New Note ✎',
         '✎ Make a New List ✎',

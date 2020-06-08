@@ -33,7 +33,6 @@ class ListItem(_NotedItem):
     def __init__(self, title, *items):
         super().__init__(title)
         self.items = items
-        print(items)
         self._itemDict = self._initItemDict()
 
     def _initItemDict(self):
@@ -41,6 +40,12 @@ class ListItem(_NotedItem):
         for item in self.items:
             itemDict.update({item[0] : item[1]})
         return itemDict
+
+    def getUncheckedItems(self):
+        uncheckedList = []
+        for item in self.items[0]:
+            uncheckedList.append('□ ' + item[0])
+        return uncheckedList
 
     def addItem(self, item):
         pass

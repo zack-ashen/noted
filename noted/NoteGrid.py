@@ -36,19 +36,16 @@ def _listifyNotedItem(notedItemList):
         note = notedItemList[index]
         noteTitle = note.title
         # execute if note is a list
-        if type(notedItemList[index]) == NotedItem.ListItem:
+        if type(note) == NotedItem.ListItem:
             # Only retrieve unchecked list items
-            uncheckedList = notedItemList[index].getUncheckedItems()
-            # get the string text of the list and change the list item to the string
-            for i in range(len(uncheckedList)):
-                uncheckedList[i] = '□  ' + uncheckedList[i].text
-            noteListFormatted.append(uncheckedList)
-            uncheckedList.insert(0, noteTitle)
+            noteList = note.getUncheckedItems()
+            noteList.insert(0, noteTitle)
+            noteListFormatted.append(noteList)
         # execute if note is a note not list
-        else:
-            note = note.bodyText.rstrip('\n').split('\n')
-            noteListFormatted.append(note)
-            note.insert(0, noteTitle)
+        elif type(note) == NotedItem.NoteItem:
+            noteList = note.bodyText.rstrip('\n').split('\n')
+            noteList.insert(0, noteTitle)
+            noteListFormatted.append(noteList)
     return noteListFormatted
 
 
