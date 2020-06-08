@@ -12,19 +12,6 @@ class _NotedItem(object):
     def __init__(self, title):
         self.title = title
 
-    def addBorder(self):
-        pass
-
-    def removeBorder(self):
-        for index in range(len(nestedList)):
-            nestedList[index].pop(0)
-            nestedList[index].pop(len(nestedList[index])-1)
-
-        for index in range(len(nestedList)):
-            for i in range(len(nestedList[index])):
-                nestedList[index][i] = re.sub("[│□]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
-        return nestedList
-
 
 class NoteItem(_NotedItem):
     """
@@ -46,6 +33,7 @@ class ListItem(_NotedItem):
     def __init__(self, title, *items):
         super().__init__(title)
         self.items = items
+        print(items)
         self._itemDict = self._initItemDict()
 
     def _initItemDict(self):

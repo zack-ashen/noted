@@ -1,13 +1,56 @@
-"""Helper functions for printing out grid of notes. These functions assist with
-the printing of a grid of notes. Primarily manipulate a nested list object which
-can be ragged or note.
+"""Helper functions for printing out grid of notes or one note. These functions \
+assist with the printing of a grid of notes. Primarily manipulate a nested list
+object which can be ragged or note.
 
 Author: Zachary Ashen
 Date: June 4th 2020
 """
 
+import os
+import re
 from textwrap import fill
+
 import NotedItem
+
+
+columns, rows = os.get_terminal_size()
+width = columns
+
+def _listifyNotedItem(notedItemList):
+    """Returns: a nested list from a Google Note object. Checked items are removed from the list.
+
+    Example: Google Note object with list titled 'Foo List' and items:
+    'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
+    'Garbage in garbage out the end of this note', becomes:
+    [[["Foo List"], ["get apples"], ["pick up gorceries"]],
+    [["Foo Note"], ["Garbage in garbage out"], ["the end of this note"]]
+
+    Precondition: googleNote is a list containing either items of type
+    'gkeepapi.node.List' or 'gkeepapi.node.Note'"""
+
+
+    # This is the list accumulator that recieves the parsed Google Notes
+    noteListFormatted = []
+
+    for index in range(len(notedItemList)):
+        note = notedItemList[index]
+        noteTitle = note.title
+        # execute if note is a list
+        if type(notedItemList[index]) == NotedItem.ListItem:
+            # Only retrieve unchecked list items
+            uncheckedList = notedItemList[index].getUncheckedItems()
+            # get the string text of the list and change the list item to the string
+            for i in range(len(uncheckedList)):
+                uncheckedList[i] = '□  ' + uncheckedList[i].text
+            noteListFormatted.append(uncheckedList)
+            uncheckedList.insert(0, noteTitle)
+        # execute if note is a note not list
+        else:
+            note = note.bodyText.rstrip('\n').split('\n')
+            noteListFormatted.append(note)
+            note.insert(0, noteTitle)
+    return noteListFormatted
+
 
 def _wrapText(nestedList):
     for index in range(len(nestedList)):
@@ -54,7 +97,7 @@ def _addListBorder(nestedList):
     return nestedList
 
 
-def removeListBorder(nestedList):
+def _removeListBorder(nestedList):
     for index in range(len(nestedList)):
         nestedList[index].pop(0)
         nestedList[index].pop(len(nestedList[index])-1)
@@ -64,68 +107,74 @@ def removeListBorder(nestedList):
             nestedList[index][i] = re.sub("[│□]", '', str(nestedList[index][i])).rstrip(' ').lstrip(' ')
     return nestedList
 
+def _buildNoteList(notedItemList):
+    """
+    """
+    noteList = _addListBorder(_wrapText(_listifyNotedItem(notedItemList)))
+    return noteList
 
-def printGrid(nestedList, startPos=0):
-    maxNestedListLength = max(len(i) for i in nestedList)
-    nestedListItemWidthAccumulator = 0
+def printGrid(notedItemList, startPos=0):
+    noteList = _buildNoteList(notedItemList)
+    maxNoteListLength = max(len(i) for i in noteList)
+    noteListItemWidthAccumulator = 0
     foundColumnCount = False
 
     global columnEndPos
     global continuePrintingRow
 
-    rowPosition = range(len(nestedList))
+    rowPosition = range(len(noteList))
 
     # ------ Find columnEndPos ------
     for index in rowPosition[startPos:]:
-        nestedListItem = nestedList[index]
+        noteListItem = noteList[index]
 
-        noteWidth = max(len(s) for s in nestedListItem)
-        nestedListItemWidthAccumulator += noteWidth
-        if nestedListItemWidthAccumulator > (width-20) and not foundColumnCount:
-            columnEndPos = (nestedList.index(nestedList[index-1]))
+        noteWidth = max(len(s) for s in noteListItem)
+        noteListItemWidthAccumulator += noteWidth
+        if noteListItemWidthAccumulator > (width-20) and not foundColumnCount:
+            columnEndPos = (noteList.index(noteList[index-1]))
             foundColumnCount = True
-        elif index == max(rowPosition[startPos:]) and not foundColumnCount and nestedListItemWidthAccumulator < width:
-            columnEndPos = len(nestedList)
+        elif index == max(rowPosition[startPos:]) and not foundColumnCount and noteListItemWidthAccumulator < width:
+            columnEndPos = len(noteList)
             continuePrintingRow = False
             foundColumnCount = True
     # ------ End Find columnEndPos ------
 
     # ------ Add spaces below note to make rectangular row of characters ------
     if columnEndPos == startPos:
-        maxNestedListLength = len(nestedList[columnEndPos])
-    elif columnEndPos == len(nestedList):
-        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos])
+        maxNoteListLength = len(noteList[columnEndPos])
+    elif columnEndPos == len(noteList):
+        maxNoteListLength = max(len(i) for i in noteList[startPos:columnEndPos])
     else:
-        maxNestedListLength = max(len(i) for i in nestedList[startPos:columnEndPos+1])
+        maxNoteListLength = max(len(i) for i in noteList[startPos:columnEndPos+1])
 
     for index in rowPosition[startPos:columnEndPos+1]:
-        nestedListItem = nestedList[index]
-        noteWidth = max(len(s) for s in nestedListItem)
-        for i in range(len(nestedListItem)):
-            if len(nestedListItem) < maxNestedListLength:
-                for x in range(maxNestedListLength-len(nestedListItem)):
-                    nestedListItem.append(' ' * noteWidth)
+        noteListItem = noteList[index]
+        noteWidth = max(len(s) for s in noteListItem)
+        for i in range(len(noteListItem)):
+            if len(noteListItem) < maxNoteListLength:
+                for x in range(maxNoteListLength-len(noteListItem)):
+                    noteListItem.append(' ' * noteWidth)
     # ------ End add spaces below note to make rectangular row of characters ------
 
 
     if (columnEndPos+1) == startPos:
-        nestedListFormatted = nestedList[columnEndPos+1]
+        noteListFormatted = noteList[columnEndPos+1]
     else:
-        nestedListRow = nestedList[startPos:columnEndPos+1]
+        noteListRow = noteList[startPos:columnEndPos+1]
 
-        nestedListFormatted = zip(*nestedListRow)
+        noteListFormatted = zip(*noteListRow)
 
-        nestedListFormatted = list(nestedListFormatted)
+        noteListFormatted = list(noteListFormatted)
 
     # ------ Center Notes ------
-    centerSpaceCount = round(abs((width - len(''.join(nestedListFormatted[0])))/2))
+    centerSpaceCount = round(abs((width - len(''.join(noteListFormatted[0])))/2))
 
-    for i in range(len(nestedListFormatted)):
+    for i in range(len(noteListFormatted)):
         print('\u001b[0;33m', end='')
         if i == 1:
             print('\u001b[1;33m', end='')
-        stringLine = ''.join(nestedListFormatted[i])
+        stringLine = ''.join(noteListFormatted[i])
         print((centerSpaceCount * ' '), stringLine)
 
     while continuePrintingRow:
-        printGrid(nestedList, columnEndPos+1)
+        printGrid(noteList, columnEndPos+1)

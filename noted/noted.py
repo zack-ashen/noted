@@ -15,7 +15,7 @@ from PyInquirer import prompt
 from textwrap import fill
 import argparse
 import json
-import NoteGrid
+from NoteGrid import printGrid
 import NotedItem
 
 #get terminal width
@@ -26,7 +26,6 @@ width = columns
 def saveNotes(noteList):
     noteFile = open('note_data/notes', 'w')
     noteDict = {}
-    print(noteList)
     for notedItemIndex in range(len(noteList)):
         notedItem = noteList[notedItemIndex]
         if type(notedItem) == NotedItem.NoteItem:
@@ -36,7 +35,7 @@ def saveNotes(noteList):
     json.dump(noteDict, noteFile)
 
 
-def retrieveNotes(noteList):
+def retrieveNotes():
     noteFile = open('note_data/notes', 'r')
     noteDict = json.load(noteFile)
     refreshedNoteList = []
@@ -97,7 +96,7 @@ def makeAList(noteList, displayNoteView=True):
         return
 
 
-def makeANote(noteList):
+def makeANote(noteList, displayNoteView=True):
     """Make a NoteItem
     """
     noteTitle = noteTitlePrompt()
@@ -114,7 +113,7 @@ def makeANote(noteList):
     noteList.append(newNote)
 
     saveNotes(noteList)
-    
+
     if displayNoteView:
         noteView()
     else:
@@ -127,9 +126,10 @@ def editNoteSelectorView():
 
 def noteView():
     #attempt to retrieve notes from previous run and print to screen
+    os.system('clear')
     try:
         noteList = retrieveNotes()
-        NoteGrid.printGrid(noteList)
+        printGrid(noteList)
         options = [
         '✎ Make a New Note ✎',
         '✎ Make a New List ✎',
@@ -150,18 +150,19 @@ def noteView():
     'type':'list',
     'name':'noteChoice',
     'message':'Please select an option for notes:',
-    'choices':options}
+    'choices':options
+    }
 
     noteOptionsChoice = prompt(noteOptions)
 
     if noteOptionsChoice['noteChoice'] == '✎ Make a New Note ✎':
-        makeANote()
+        makeANote(noteList)
     elif noteOptionsChoice['noteChoice'] == '✎ Make a New List ✎':
-        makeAList()
+        makeAList(noteList)
     elif noteOptionsChoice['noteChoice'] == '✎ Edit a Note ✎':
         editNoteSelectorView()
     elif noteOptionsChoice['noteChoice'] == '⛔ Exit ⛔':
-        saveNotes()
+        saveNotes(noteList)
 
 def animateWelcomeText():
     """Animates the welcome noted text in ASCII font and welcome paragraph."""
@@ -173,30 +174,40 @@ def animateWelcomeText():
     print('\u001b[1;34m', end='')
 
     text = ''
-    for character in welcomeText:
+    if rows < 40:
+        for character in welcomeText:
+            os.system('clear')
+            text += character
+            print('\n' * round(rows/4))
+            print(fig.renderText(text))
+            sleep(0.1)
         os.system('clear')
-        text += character
-        print(fig.renderText(text))
-        sleep(0.1)
-
-    print('\u001b[0;34m', end='')
-    paragraphText = 'Hello! This is a terminal based note taking program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/noted. I tried to add a decent amount of features. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
-
-    paragraphStrings = []
-
-    if width < 100:
-        print(paragraphText)
     else:
-        paragraphText = str(fill(paragraphText, width/2))
-        paragraphTextList = paragraphText.split('\n')
-        for index in range(len(paragraphTextList)):
-            print(paragraphTextList[index].center(width))
-        print('\n')
+        for character in welcomeText:
+            os.system('clear')
+            text += character
+            print(fig.renderText(text))
+            sleep(0.1)
 
-        line = ''
-        for index in range(width):
-            line += '─'
-        print(line)
+        print('\u001b[0;34m', end='')
+        paragraphText = 'Hello! This is a terminal based note taking program. It is still in development so feel free to leave comments or suggestions on the github page: https://github.com/zack-ashen/noted. I tried to add a decent amount of features. However, if there is something you want to see feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n'
+
+        paragraphStrings = []
+
+        if width < 100:
+            print(paragraphText)
+        else:
+            paragraphText = str(fill(paragraphText, width/2))
+            paragraphTextList = paragraphText.split('\n')
+            for index in range(len(paragraphTextList)):
+                print(paragraphTextList[index].center(width))
+            print('\n')
+
+            line = ''
+            for index in range(width):
+                line += '─'
+            print(line)
+
 
 
 def main():
