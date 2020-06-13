@@ -17,14 +17,14 @@ class _NotedItem(object):
 class NoteItem(_NotedItem):
     """
     """
-    def __init__(self, title, bodyText):
+    def __init__(self, title, body_text):
         super().__init__(title)
-        self.bodyText = bodyText
+        self.body_text = body_text
 
     def toDict(self):
         listItemDict = {
             'title': self.title,
-            'body': self.bodyText
+            'body': self.body_text
         }
         return listItemDict
 
@@ -33,13 +33,6 @@ class ListItem(_NotedItem):
     def __init__(self, title, *items):
         super().__init__(title)
         self.items = items
-        self._itemDict = self._initItemDict()
-
-    def _initItemDict(self):
-        itemDict = {}
-        for item in self.items:
-            itemDict.update({item[0] : item[1]})
-        return itemDict
 
     def getUncheckedItems(self):
         uncheckedList = []
@@ -49,7 +42,7 @@ class ListItem(_NotedItem):
         return uncheckedList
 
     def add_item(self, item):
-        pass
+        self.items[0].append(item)
 
     def delete_item(self, item_name):
         for item in self.items[0]:
@@ -65,7 +58,6 @@ class ListItem(_NotedItem):
                 item_list[0] = new_name
                 index_of_item = self.items[0].index(item)
                 self.items[0][index_of_item] = tuple(item_list)
-
 
     def check_item(self, items_to_check):
         for item in self.items[0]:

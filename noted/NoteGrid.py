@@ -41,7 +41,7 @@ def _listify_noted_item(noted_item_list):
             note_list_formatted.append(note_list)
         # execute if note is a note not list
         elif type(note) == NotedItem.NoteItem:
-            note_list = note.bodyText.rstrip('\n').split('\n')
+            note_list = note.body_text.rstrip('\n').split('\n')
             note_list.insert(0, note_title)
             note_list_formatted.append(note_list)
     return note_list_formatted

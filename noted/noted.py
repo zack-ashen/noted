@@ -19,8 +19,7 @@ from NoteGrid import print_grid
 import NotedItem
 
 # get terminal width
-columns, rows = os.get_terminal_size()
-width = columns
+width, height = os.get_terminal_size()
 
 
 def save_notes(note_list):
@@ -29,7 +28,7 @@ def save_notes(note_list):
     for notedItemIndex in range(len(note_list)):
         noted_item = note_list[notedItemIndex]
         if type(noted_item) == NotedItem.NoteItem:
-            note_dict.update({notedItemIndex: {'title': noted_item.title, 'body': noted_item.bodyText}})
+            note_dict.update({notedItemIndex: {'title': noted_item.title, 'body': noted_item.body_text}})
         elif type(noted_item) == NotedItem.ListItem:
             note_dict.update({notedItemIndex: {'title': noted_item.title, 'items': noted_item.items}})
     json.dump(note_dict, note_file)
@@ -56,94 +55,93 @@ def retrieve_notes():
 
 
 def change_note_title():
-    """
-
-    @return:
-    """
     note_title_prompt = [
         {
             'type': 'input',
-            'name': 'noteTitle',
+            'name': 'note_title',
             'message': 'What should the title of the note be?',
         }]
 
-    noteTitleAnswer = prompt(note_title_prompt)
+    note_title_answer = prompt(note_title_prompt)
 
     try:
-        noteTitle = noteTitleAnswer['noteTitle']
+        note_title = note_title_answer['note_title']
     except KeyError:
         return
 
     note_list = retrieve_notes()
-    if noteTitle in note_list:
+    if note_title in note_list:
         print('Sorry, but you must choose a unique title. You have already used that title...')
-        note_title_prompt()
-    return noteTitle
+        change_note_title()
+    return note_title
 
 
-def make_a_list(note_list, display_note_view=True):
-    """
+def edit_note_body(previous_text=''):
+    os.system('touch note')
 
-    @param note_list:
-    @param display_note_view:
-    @return:
-    """
-    noteTitle = change_note_title()
-
-    listFinished = False
-    listItems = []
-    while listFinished == False:
-        addListItem = [
-            {
-                'type': 'input',
-                'name': 'listItem',
-                'message': 'Add a list item (Enter \'-\' to finish):',
-            }]
-
-        listItemAnswer = prompt(addListItem)
-
-        try:
-            listItem = (listItemAnswer['listItem'], False)
-        except KeyError:
-            return
-
-        listItems.append(listItem)
-
-        if listItemAnswer['listItem'] == '-':
-            listItems.pop(len(listItems) - 1)
-            listFinished = True
-
-    newListItem = NotedItem.ListItem(noteTitle, listItems)
-    note_list.append(newListItem)
-
-    save_notes(note_list)
-
-    if display_note_view:
-        noteView()
-    else:
-        return
-
-
-def make_a_note(noteList, displayNoteView=True):
-    """Make a NoteItem
-    """
-    noteTitle = change_note_title()
+    note_body_file = open('note', "w")
+    text_body = note_body_file.write(previous_text)
+    note_body_file.close()
 
     os.system('$EDITOR note')
 
     with open('note', 'r') as file:
-        noteBody = file.read()
+        note_body = file.read()
 
     os.system('rm note')
+    return note_body
 
-    newNote = NotedItem.NoteItem(noteTitle, noteBody)
 
-    noteList.append(newNote)
+def make_a_list(note_list, display_note_view=True):
+    note_title = change_note_title()
 
-    save_notes(noteList)
+    list_finished = False
+    list_items = []
+    while not list_finished:
+        add_list_item = [
+            {
+                'type': 'input',
+                'name': 'list_item',
+                'message': 'Add a list item (Enter \'-\' to finish):',
+            }]
 
-    if displayNoteView:
-        noteView()
+        list_item_answer = prompt(add_list_item)
+
+        try:
+            list_item = (list_item_answer['list_item'], False)
+        except KeyError:
+            return
+
+        list_items.append(list_item)
+
+        if list_item_answer['list_item'] == '-':
+            list_items.pop(len(list_items) - 1)
+            list_finished = True
+
+    new_list_item = NotedItem.ListItem(note_title, list_items)
+    note_list.append(new_list_item)
+
+    save_notes(note_list)
+
+    if display_note_view:
+        note_view()
+    else:
+        return
+
+
+def make_a_note(note_list, display_note_view=True):
+    note_title = change_note_title()
+
+    note_body = edit_note_body()
+
+    new_note = NotedItem.NoteItem(note_title, note_body)
+
+    note_list.append(new_note)
+
+    save_notes(note_list)
+
+    if display_note_view:
+        note_view()
     else:
         return
 
@@ -153,7 +151,7 @@ def delete_note(note_list, index_of_note):
     return note_list
 
 
-def editNoteTitle(noted_item):
+def edit_note_title(noted_item):
     noted_item.title = change_note_title()
     return noted_item
 
@@ -223,14 +221,36 @@ def edit_items_view(noted_list, index_of_note):
     except KeyError:
         return
 
-def add_items_view(noted_list, index_of_note):
+
+def add_items_view(noted_list):
     list_finished = False
     while not list_finished:
-        
+        add_list_item = [
+            {
+                'type': 'input',
+                'name': 'list_item',
+                'message': 'Add a list item (Enter \'-\' to finish):',
+            }]
 
+        list_item_answer = prompt(add_list_item)
+
+        if list_item_answer['list_item'] == '-':
+            list_finished = True
+        else:
+            list_item = (list_item_answer.get('list_item'), False)
+            noted_list.add_item(list_item)
+    return noted_list
+
+
+def edit_note_text_view(note):
+    new_text = edit_note_body(note.body_text)
+    note.body_text = new_text
+    return note
 
 
 def edit_note_view(index_of_note):
+    os.system('clear')
+
     note_list = retrieve_notes()
     note = note_list[index_of_note]
     print_grid([note])
@@ -251,7 +271,7 @@ def edit_note_view(index_of_note):
 
     try:
         if edit_note_selection['editNoteSelector'] == 'Edit Title':
-            note = editNoteTitle(note)
+            note = edit_note_title(note)
             note_list[index_of_note] = note
             save_notes(note_list)
             edit_note_view(index_of_note)
@@ -260,11 +280,11 @@ def edit_note_view(index_of_note):
             save_notes(note_list)
             # if no more notes left return to main view...else select new note to edit
             if len(note_list) == 0:
-                noteView()
+                note_view()
             else:
-                editNoteSelector()
+                edit_note_selector()
         elif edit_note_selection['editNoteSelector'] == 'Go Back':
-            editNoteSelector()
+            edit_note_selector()
         elif edit_note_selection['editNoteSelector'] == 'Check Items':
             note = check_items_view(note)
             note_list[index_of_note] = note
@@ -276,57 +296,60 @@ def edit_note_view(index_of_note):
             save_notes(note_list)
             edit_note_view(index_of_note)
         elif edit_note_selection['editNoteSelector'] == 'Add Items':
-            note = add_items_view(note, index_of_note)
+            note = add_items_view(note)
             note_list[index_of_note] = note
-            save_notes()
+            save_notes(note_list)
             edit_note_view(index_of_note)
         elif edit_note_selection['editNoteSelector'] == 'Edit Note':
-            pass
+            note = edit_note_text_view(note)
+            note_list[index_of_note] = note
+            save_notes(note_list)
+            edit_note_view(index_of_note)
     except KeyError:
         save_notes(note_list)
 
 
-def editNoteSelector():
-    noteList = retrieve_notes()
+def edit_note_selector():
+    note_list = retrieve_notes()
 
     # append all titles of the notes
-    noteChoices = []
-    for item in noteList:
-        noteChoices.append(item.title)
-    noteChoices.append('Go Back')
+    note_choices = []
+    for item in note_list:
+        note_choices.append(item.title)
+    note_choices.append('Go Back')
 
     # display prompt of all note titles to select which to edit
-    noteSelectorPrompt = {
+    note_selector_prompt = {
         'type': 'list',
         'name': 'noteSelector',
         'message': 'Please select a note to edit:',
-        'choices': noteChoices
+        'choices': note_choices
     }
-    noteSelection = prompt(noteSelectorPrompt)
+    note_selection = prompt(note_selector_prompt)
 
     try:
-        if noteSelection['noteSelector'] == 'Go Back':
-            noteView()
+        if note_selection['noteSelector'] == 'Go Back':
+            note_view()
         else:
-            index_of_note = noteChoices.index(noteSelection['noteSelector'])
+            index_of_note = note_choices.index(note_selection['noteSelector'])
             edit_note_view(index_of_note)
     except KeyError:
-        save_notes(noteList)
+        save_notes(note_list)
 
 
-def noteView():
+def note_view():
     # attempt to retrieve notes from previous run and print to screen
     os.system('clear')
     try:
-        noteList = retrieve_notes()
-        print_grid(noteList)
+        note_list = retrieve_notes()
+        print_grid(note_list)
         options = [
             '✎ Make a New Note ✎',
             '✎ Make a New List ✎',
             '✎ Edit a Note ✎',
             '⛔ Exit ⛔']
     # no previous notes exist so prompt to create a new note or list
-    except:
+    except IndexError:
         print('\u001b[1;31m', end='')
         print('You don\'t have any notes!'.center(width))
         options = [
@@ -334,70 +357,70 @@ def noteView():
             '✎ Make a New List ✎',
             '⛔ Exit ⛔'
         ]
-        noteList = []
+        note_list = []
 
-    noteOptions = {
+    note_options = {
         'type': 'list',
         'name': 'noteChoice',
         'message': 'Please select an option for notes:',
         'choices': options
     }
 
-    noteOptionsChoice = prompt(noteOptions)
+    note_options_choice = prompt(note_options)
 
     try:
-        if noteOptionsChoice['noteChoice'] == '✎ Make a New Note ✎':
-            make_a_note(noteList)
-        elif noteOptionsChoice['noteChoice'] == '✎ Make a New List ✎':
-            make_a_list(noteList)
-        elif noteOptionsChoice['noteChoice'] == '✎ Edit a Note ✎':
-            editNoteSelector()
-        elif noteOptionsChoice['noteChoice'] == '⛔ Exit ⛔':
-            save_notes(noteList)
+        if note_options_choice['noteChoice'] == '✎ Make a New Note ✎':
+            make_a_note(note_list)
+        elif note_options_choice['noteChoice'] == '✎ Make a New List ✎':
+            make_a_list(note_list)
+        elif note_options_choice['noteChoice'] == '✎ Edit a Note ✎':
+            edit_note_selector()
+        elif note_options_choice['noteChoice'] == '⛔ Exit ⛔':
+            save_notes(note_list)
     except KeyError:
-        save_notes(noteList)
+        save_notes(note_list)
 
 
-def animateWelcomeText():
+def animate_welcome_text():
     """Animates the welcome noted text in ASCII font and welcome paragraph."""
 
     fig = Figlet(font='ogre', justify='center', width=width)
 
-    welcomeText = 'noted...'
+    welcome_text = 'noted...'
 
     print('\u001b[1;34m', end='')
 
     text = ''
-    if rows < 40:
-        for character in welcomeText:
+    if height < 40:
+        for character in welcome_text:
             os.system('clear')
             text += character
-            print('\n' * round(rows / 4))
+            print('\n' * round(height / 4))
             print(fig.renderText(text))
             sleep(0.1)
         os.system('clear')
     else:
-        for character in welcomeText:
+        for character in welcome_text:
             os.system('clear')
             text += character
             print(fig.renderText(text))
             sleep(0.1)
 
         print('\u001b[0;34m', end='')
-        paragraphText = 'Hello! This is a terminal based note taking program. It is still in development so feel free ' \
-                        'to leave comments or suggestions on the github page: https://github.com/zack-ashen/noted. I ' \
-                        'tried to add a decent amount of features. However, if there is something you want to see ' \
-                        'feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n '
+        paragraph_text = 'Hello! This is a terminal based note taking program. It is still in development so feel free ' \
+                         'to leave comments or suggestions on the github page: https://github.com/zack-ashen/noted. I' \
+                         ' tried to add a decent amount of features. However, if there is something you want to see ' \
+                         'feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n '
 
-        paragraphStrings = []
+        paragraph_strings = []
 
         if width < 100:
-            print(paragraphText)
+            print(paragraph_text)
         else:
-            paragraphText = str(fill(paragraphText, width / 2))
-            paragraphTextList = paragraphText.split('\n')
-            for index in range(len(paragraphTextList)):
-                print(paragraphTextList[index].center(width))
+            paragraph_text = str(fill(paragraph_text, width / 2))
+            paragraph_text_list = paragraph_text.split('\n')
+            for index in range(len(paragraph_text_list)):
+                print(paragraph_text_list[index].center(width))
             print('\n')
 
             line = ''
@@ -407,8 +430,8 @@ def animateWelcomeText():
 
 
 def main():
-    animateWelcomeText()
-    noteView()
+    animate_welcome_text()
+    note_view()
 
 
 if __name__ == '__main__':
