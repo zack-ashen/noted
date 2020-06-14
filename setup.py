@@ -8,7 +8,7 @@ install_requirements = [
 ]
 
 setup(
-    name='noted',
+    name='noted-notes',
     version=__version__,
     author='Zachary Ashen',
     author_email='zachary.h.a@gmail.com',
