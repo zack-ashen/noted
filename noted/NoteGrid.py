@@ -1,4 +1,4 @@
-"""Helper functions for printing out grid of notes.json or one note. These functions \
+"""Helper functions for printing out grid of notes.json or one note. These functions
 assist with the printing of a grid of notes.json. Primarily manipulate a nested list
 object which can be ragged or note.
 
@@ -11,24 +11,15 @@ import re
 from textwrap import fill
 from . import NotedItem
 
+
 # get terminal dimensions
 columns, rows = os.get_terminal_size()
 width = columns
 
 
 def _listify_noted_item(noted_item_list):
-    # Returns: a nested list from a Google Note object. Checked items are removed from the list.
-    #
-    # Example: Google Note object with list titled 'Foo List' and items:
-    # 'get apples', "pick up groceries" and a note titled 'Foo Note' with text:
-    # 'Garbage in garbage out the end of this note', becomes:
-    # [[["Foo List"], ["get apples"], ["pick up gorceries"]],
-    # [["Foo Note"], ["Garbage in garbage out"], ["the end of this note"]]
-    #
-    # Precondition: googleNote is a list containing either items of type
-    # 'gkeepapi.node.List' or 'gkeepapi.node.Note'
-
-    # This is the list accumulator that recieves the parsed Google Notes
+    # Returns: a ragged list of notes with the format [[['list title'],['list body']], [['list title'],['item 1']]]
+    # Precondition: noted_item_list is a list of NotedItem objects.
     note_list_formatted = []
 
     for index in range(len(noted_item_list)):
@@ -49,6 +40,10 @@ def _listify_noted_item(noted_item_list):
 
 
 def _wrap_text(nested_list):
+    # Returns: a nested list with return keys if the string within the nested list goes beyond the width of the
+    # terminal.
+    # Precondition: nested_list is a ragged list of NotedItem objects that has already been listified using
+    # _listify_noted_item.
     for index in range(len(nested_list)):
         for i in range(len(nested_list[index])):
             if len(nested_list[index][i]) > (width - 25):
@@ -93,6 +88,9 @@ def _add_list_border(nested_list):
 
 
 def _remove_list_border(nested_list):
+    # Returns: a ragged list without ASCII borders the returned list will not have any borders.
+    # Precondition: nested_list contains borders applied to it by the function _add_list_borders and nested_list is a
+    # ragged list.
     for index in range(len(nested_list)):
         nested_list[index].pop(0)
         nested_list[index].pop(len(nested_list[index]) - 1)
@@ -104,11 +102,18 @@ def _remove_list_border(nested_list):
 
 
 def _build_note_list(noted_item_list):
+    # Returns: a formatted note list with borders and in list format for an easier way to display in grid view.
+    # Precondition: noted_item_list is a list of NotedItem objects.
     noteList = _add_list_border(_wrap_text(_listify_noted_item(noted_item_list)))
     return noteList
 
 
 def print_grid(noted_item_list, start_pos=0):
+    """ Prints out a grid of NotedItem objects with borders and responsively to the size of the terminal.
+    @param noted_item_list: is a list of NotedItem objects.
+    @param start_pos: the position in the array of NotedItem objects to begin printing. This should be left alone and
+    the default value of 0 should be used. As the function is recursively called this is increased to print more rows.
+    """
     note_list = _build_note_list(noted_item_list)
     max_note_list_length = max(len(i) for i in note_list)
     note_list_item_width_accumulator = 0
