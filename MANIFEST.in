@@ -1,1 +1,2 @@
 include noted/note_data/notes.json
+include README-pip.md
