@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 """
 Noted
 Author: Zachary Ashen
@@ -9,21 +8,25 @@ Contact: zachary.h.a@gmail.com
 
 import os
 from time import sleep
-import re
+from textwrap import fill
+import json
+
 from pyfiglet import Figlet
 from PyInquirer import prompt
-from textwrap import fill
-import argparse
-import json
-from NoteGrid import print_grid
-import NotedItem
+
+from .NoteGrid import print_grid
+from . import NotedItem
+
 
 # get terminal width
 width, height = os.get_terminal_size()
 
+# path to stored notes
+dir, filename = os.path.split(__file__)
+notes_file_path = os.path.join(dir, "note_data", "notes.json")
+
 
 def save_notes(note_list):
-    note_file = open('note_data/notes', 'w')
     note_dict = {}
     for notedItemIndex in range(len(note_list)):
         noted_item = note_list[notedItemIndex]
@@ -31,16 +34,18 @@ def save_notes(note_list):
             note_dict.update({notedItemIndex: {'title': noted_item.title, 'body': noted_item.body_text}})
         elif type(noted_item) == NotedItem.ListItem:
             note_dict.update({notedItemIndex: {'title': noted_item.title, 'items': noted_item.items}})
+
+    note_file = open(notes_file_path, 'w')
     json.dump(note_dict, note_file)
 
 
 def retrieve_notes():
-    note_file = open('note_data/notes', 'r')
+    note_file = open(notes_file_path, 'r')
     note_dict = json.load(note_file)
 
     refreshed_note_list = []
-    for notedItem in note_dict:
-        note_item_dict = note_dict[notedItem]
+    for noted_item in note_dict:
+        note_item_dict = note_dict[noted_item]
         if 'body' in note_item_dict.keys():
             new_note_item = NotedItem.NoteItem(note_item_dict['title'], note_item_dict['body'])
         elif 'items' in note_item_dict.keys():
@@ -48,8 +53,6 @@ def retrieve_notes():
                 note_item_dict['items'][0][item] = tuple(note_item_dict['items'][0][item])
             new_note_item = NotedItem.ListItem(note_item_dict['title'], note_item_dict['items'][0])
         refreshed_note_list.append(new_note_item)
-
-    note_file.close()
 
     return refreshed_note_list
 
@@ -69,10 +72,14 @@ def change_note_title():
     except KeyError:
         return
 
-    note_list = retrieve_notes()
-    if note_title in note_list:
-        print('Sorry, but you must choose a unique title. You have already used that title...')
-        change_note_title()
+    try:
+        note_list = retrieve_notes()
+        for item in note_list:
+            if note_title == item.title:
+                print('Sorry, but you must choose a unique title. You have already used that title...')
+                note_title = change_note_title()
+    except json.decoder.JSONDecodeError:
+        pass
     return note_title
 
 
@@ -80,7 +87,7 @@ def edit_note_body(previous_text=''):
     os.system('touch note')
 
     note_body_file = open('note', "w")
-    text_body = note_body_file.write(previous_text)
+    note_body_file.write(previous_text)
     note_body_file.close()
 
     os.system('$EDITOR note')
@@ -157,7 +164,7 @@ def edit_note_title(noted_item):
 
 
 def check_items_view(noted_list):
-    items = noted_list.getUncheckedItems()
+    items = noted_list.get_unchecked_items()
 
     items_list = []
     for item in items:
@@ -181,7 +188,7 @@ def check_items_view(noted_list):
 
 
 def edit_items_view(noted_list, index_of_note):
-    items = noted_list.getUncheckedItems()
+    items = noted_list.get_unchecked_items()
 
     items_choices = []
     for item in items:
@@ -349,7 +356,7 @@ def note_view():
             '✎ Edit a Note ✎',
             '⛔ Exit ⛔']
     # no previous notes exist so prompt to create a new note or list
-    except IndexError:
+    except json.decoder.JSONDecodeError:
         print('\u001b[1;31m', end='')
         print('You don\'t have any notes!'.center(width))
         options = [
@@ -411,8 +418,6 @@ def animate_welcome_text():
                          'to leave comments or suggestions on the github page: https://github.com/zack-ashen/noted. I' \
                          ' tried to add a decent amount of features. However, if there is something you want to see ' \
                          'feel free to make a request on github or email: zachary.h.a@gmail.com. Thanks! \n '
-
-        paragraph_strings = []
 
         if width < 100:
             print(paragraph_text)

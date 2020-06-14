@@ -4,29 +4,23 @@ Author: Zachary Ashen
 Date: June 4th 2020
 """
 
-import re
-
 
 class _NotedItem(object):
-    """
-    """
     def __init__(self, title):
         self.title = title
 
 
 class NoteItem(_NotedItem):
-    """
-    """
     def __init__(self, title, body_text):
         super().__init__(title)
         self.body_text = body_text
 
-    def toDict(self):
-        listItemDict = {
+    def to_dict(self):
+        list_item_dict = {
             'title': self.title,
             'body': self.body_text
         }
-        return listItemDict
+        return list_item_dict
 
 
 class ListItem(_NotedItem):
@@ -34,12 +28,12 @@ class ListItem(_NotedItem):
         super().__init__(title)
         self.items = items
 
-    def getUncheckedItems(self):
-        uncheckedList = []
+    def get_unchecked_items(self):
+        unchecked_list = []
         for item in self.items[0]:
             if not item[1]:
-                uncheckedList.append('□ ' + item[0])
-        return uncheckedList
+                unchecked_list.append('□ ' + item[0])
+        return unchecked_list
 
     def add_item(self, item):
         self.items[0].append(item)
@@ -47,7 +41,7 @@ class ListItem(_NotedItem):
     def delete_item(self, item_name):
         for item in self.items[0]:
             if item_name == item[0]:
-                print(self.items[0] )
+                print(self.items[0])
                 index_of_item = self.items[0].index(item)
                 self.items[0].pop(index_of_item)
 
@@ -69,10 +63,10 @@ class ListItem(_NotedItem):
                     item = tuple(item_list)
                     self.items[0][index_of_item] = item
 
-    def toDict(self):
-        listItemDict = {
-            'title' : self.title,
-            'items' : self.items
+    def to_dict(self):
+        list_item_dict = {
+            'title': self.title,
+            'items': self.items
         }
 
-        return listItemDict
+        return list_item_dict

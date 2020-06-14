@@ -1,5 +1,5 @@
-"""Helper functions for printing out grid of notes or one note. These functions \
-assist with the printing of a grid of notes. Primarily manipulate a nested list
+"""Helper functions for printing out grid of notes.json or one note. These functions \
+assist with the printing of a grid of notes.json. Primarily manipulate a nested list
 object which can be ragged or note.
 
 Author: Zachary Ashen
@@ -9,8 +9,9 @@ Date: June 4th 2020
 import os
 import re
 from textwrap import fill
-import NotedItem
+from . import NotedItem
 
+# get terminal dimensions
 columns, rows = os.get_terminal_size()
 width = columns
 
@@ -36,7 +37,7 @@ def _listify_noted_item(noted_item_list):
         # execute if note is a list
         if type(note) == NotedItem.ListItem:
             # Only retrieve unchecked list items
-            note_list = note.getUncheckedItems()
+            note_list = note.get_unchecked_items()
             note_list.insert(0, note_title)
             note_list_formatted.append(note_list)
         # execute if note is a note not list
@@ -64,17 +65,17 @@ def _wrap_text(nested_list):
     return nested_list
 
 
-def _add_list_border(nestedList):
+def _add_list_border(nested_list):
     # Returns: a ragged list with ASCII borders. The nested lists will have borders.
     # Precondition: list is a nested list and all items in the nested list are strings
-    for index in range(len(nestedList)):
-        list_item = nestedList[index]
+    for index in range(len(nested_list)):
+        list_item = nested_list[index]
         border_width = max(len(s) for s in list_item)
 
         # add top border
         top_border = ['┌' + '─' * border_width + '┐']
         top_border = re.sub("['',]", '', str(top_border)).strip('[]')
-        nestedList[index].insert(0, top_border)
+        nested_list[index].insert(0, top_border)
 
         # iterate over middle lines and add border there
         for i in range(len(list_item)):
@@ -87,8 +88,8 @@ def _add_list_border(nestedList):
         # add bottom border
         bottom_border = ['└' + '─' * border_width + '┘']
         bottom_border = re.sub("['',]", '', str(bottom_border)).strip('[]')
-        nestedList[index].append(bottom_border)
-    return nestedList
+        nested_list[index].append(bottom_border)
+    return nested_list
 
 
 def _remove_list_border(nested_list):
