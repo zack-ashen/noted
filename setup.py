@@ -17,7 +17,7 @@ setup(
                 'is a fork of my previous project keep-cli. Notes appear as cards. You can make lists and write '
                 'random ideas. ',
     url='https://github.com/zack-ashen/noted',
-    long_description=open('README.md').read(),
+    long_description=open('README-pip.md').read(),
     long_description_content_type='text/markdown',
     install_requires=install_requirements,
     python_requires='>=3.5',
