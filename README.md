@@ -7,7 +7,7 @@
 
 #### PIP (easiest)
 ```sh
-pip install noted
+pip3 install noted-notes
 ```
 
 #### Arch Linux (AUR)
