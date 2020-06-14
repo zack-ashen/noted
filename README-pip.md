@@ -10,13 +10,8 @@
 pip3 install noted-notes
 ```
 
-#### Arch Linux (AUR)
-```sh
-yay -S noted-git
-```
-
 ### Configuration
-In order to make a note you must have the `$EDITOR` environment variable set to a text editor.
+In order to make a note you must have the `$EDITOR` environment variable set to a text editor such as `vim` or `nano`.
 
 ## Usage
 
