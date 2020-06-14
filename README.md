@@ -20,7 +20,7 @@ In order to make a note you must have the `$EDITOR` environment variable set to 
 
 ## Usage
 
-### Run keep-cli visually:
+### Run noted visually:
 ```sh
 noted
 ```
