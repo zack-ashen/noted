@@ -27,19 +27,25 @@ notes_file_path = os.path.join(dir, "note_data", "notes.json")
 
 
 def save_notes(note_list):
+    """Saves notes by converting note_list into a dictionary and storing in a JSON file.
+    @param note_list: a list of NotedItem objects to be saved in a file for future use.
+    """
     note_dict = {}
-    for notedItemIndex in range(len(note_list)):
-        noted_item = note_list[notedItemIndex]
+    for noted_item_index in range(len(note_list)):
+        noted_item = note_list[noted_item_index]
         if type(noted_item) == NotedItem.NoteItem:
-            note_dict.update({notedItemIndex: {'title': noted_item.title, 'body': noted_item.body_text}})
+            note_dict.update({noted_item_index: {'title': noted_item.title, 'body': noted_item.body_text}})
         elif type(noted_item) == NotedItem.ListItem:
-            note_dict.update({notedItemIndex: {'title': noted_item.title, 'items': noted_item.items}})
+            note_dict.update({noted_item_index: {'title': noted_item.title, 'items': noted_item.items}})
 
     note_file = open(notes_file_path, 'w')
     json.dump(note_dict, note_file)
 
 
 def retrieve_notes():
+    """Retrieves notes from notes.json file and converts them from a dictionary back into a list of NotedItem objects.
+    @return: a list of Noted Item objects both NoteItems and ListItems.
+    """
     note_file = open(notes_file_path, 'r')
     note_dict = json.load(note_file)
 
@@ -58,6 +64,9 @@ def retrieve_notes():
 
 
 def change_note_title():
+    """Gives a prompt for user to select a title either a new one or changing a previous notes title.
+    @return: a string for the notes title.
+    """
     note_title_prompt = [
         {
             'type': 'input',
@@ -84,6 +93,12 @@ def change_note_title():
 
 
 def edit_note_body(previous_text=''):
+    """Gives a prompt using the $EDITOR environment variable to create a new note body text either for the first time
+    or changing the previous note body.
+    @param previous_text: previous text is a string of the previous note_body text if changing the from a previous note.
+    If it is a brand new note the default value is used of nothing.
+    @return: a string of the new note body text.
+    """
     os.system('touch note')
 
     note_body_file = open('note', "w")
@@ -100,6 +115,10 @@ def edit_note_body(previous_text=''):
 
 
 def make_a_list(note_list, display_note_view=True):
+    """Makes a ListItem
+    @param note_list: a list of NotedItem objects.
+    @param display_note_view: whether to display note_view after creating a NotedList or return.
+    """
     note_title = change_note_title()
 
     list_finished = False
@@ -137,6 +156,10 @@ def make_a_list(note_list, display_note_view=True):
 
 
 def make_a_note(note_list, display_note_view=True):
+    """Makes a NoteItem
+    @param note_list: a list of NotedItem objects.
+    @param display_note_view: whether to display note_view after creating a NotedList or return.
+    """
     note_title = change_note_title()
 
     note_body = edit_note_body()
@@ -154,16 +177,30 @@ def make_a_note(note_list, display_note_view=True):
 
 
 def delete_note(note_list, index_of_note):
+    """Deletes a note
+    @param note_list: a list of NotedItem objects.
+    @param index_of_note: the index of the item to delete in the note_list.
+    @return: the edited note_list without the item meant to be deleted.
+    """
     del note_list[index_of_note]
     return note_list
 
 
 def edit_note_title(noted_item):
+    """Edit the note title
+    @param noted_item: a NotedItem object
+    @return: a noted_item with a different title.
+    """
     noted_item.title = change_note_title()
     return noted_item
 
 
 def check_items_view(noted_list):
+    """A view to check items off a ListItem displays all of the unchecked items and allows the user to select which ones
+    to check off.
+    @param noted_list: a ListItem object.
+    @return: a new noted_list with the edited note having checked off items.
+    """
     items = noted_list.get_unchecked_items()
 
     items_list = []
@@ -188,6 +225,11 @@ def check_items_view(noted_list):
 
 
 def edit_items_view(noted_list, index_of_note):
+    """A view for editing the names of items in a ListItem or deleting items in a ListItem.
+    @param noted_list: a ListItem object.
+    @param index_of_note: the index of the item to delete in the note_list.
+    @return: a new ListItem object with the edited items.
+    """
     items = noted_list.get_unchecked_items()
 
     items_choices = []
@@ -230,6 +272,10 @@ def edit_items_view(noted_list, index_of_note):
 
 
 def add_items_view(noted_list):
+    """A view for adding items to a ListItem. Gives a prompt for a series of inputs to continue adding unchecked items.
+    @param noted_list: a ListItem object.
+    @return: an edited ListItem object with items added.
+    """
     list_finished = False
     while not list_finished:
         add_list_item = [
@@ -250,12 +296,19 @@ def add_items_view(noted_list):
 
 
 def edit_note_text_view(note):
+    """Edit the body text of a NoteItem
+    @param note: the NoteItem object to change the body text of.
+    @return: a new NoteItem object with a different body text.
+    """
     new_text = edit_note_body(note.body_text)
     note.body_text = new_text
     return note
 
 
 def edit_note_view(index_of_note):
+    """A view to edit a NotedItem object whether it is a NoteItem or ListItem.
+    @param index_of_note: the index of the note to edit in note_list.
+    """
     os.system('clear')
 
     note_list = retrieve_notes()
@@ -317,6 +370,9 @@ def edit_note_view(index_of_note):
 
 
 def edit_note_selector():
+    """Display a list of notes in notes.json file and have user select which note they want to edit. After selecting the
+    note the note gets passed to edit_note_view.
+    """
     note_list = retrieve_notes()
 
     # append all titles of the notes
@@ -345,6 +401,7 @@ def edit_note_selector():
 
 
 def note_view():
+    """Display a grid of notes and options to manipulate those notes or create new notes."""
     # attempt to retrieve notes from previous run and print to screen
     os.system('clear')
     try:
@@ -390,7 +447,6 @@ def note_view():
 
 def animate_welcome_text():
     """Animates the welcome noted text in ASCII font and welcome paragraph."""
-
     fig = Figlet(font='ogre', justify='center', width=width)
 
     welcome_text = 'noted...'
@@ -435,6 +491,7 @@ def animate_welcome_text():
 
 
 def main():
+    """Animate a welcome text display and then display a grid of notes with options to edit or create new notes."""
     animate_welcome_text()
     note_view()
 
