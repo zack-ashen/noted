@@ -12,7 +12,7 @@ pip3 install noted-notes
 
 #### Arch Linux (AUR)
 ```sh
-yay -S noted-git
+yay -S noted-cli-git
 ```
 
 ### Configuration
